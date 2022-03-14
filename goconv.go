@@ -20,7 +20,9 @@ type Service struct {
 
 // NewService .
 func NewService() *Service {
-	s := &Service{}
+	s := &Service{
+		queue: make(chan request),
+	}
 	go s.run()
 	return s
 }
@@ -43,7 +45,7 @@ func (s *Service) run() {
 }
 
 // Convert submit a conversion request to the service
-func (s *Service) Convert(r io.Reader, filename string, w io.Writer) error {
+func (s *Service) Convert(r io.Reader, w io.Writer) error {
 	tempfile, err := ioutil.TempFile(os.TempDir(), "goconv*")
 	if err != nil {
 		return err
@@ -53,7 +55,7 @@ func (s *Service) Convert(r io.Reader, filename string, w io.Writer) error {
 	tempfile.Close()
 	errchan := make(chan error)
 	req := request{
-		filename,
+		tempfile.Name(),
 		w,
 		errchan,
 	}
